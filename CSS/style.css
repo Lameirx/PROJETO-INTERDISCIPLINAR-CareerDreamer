@@ -65,15 +65,9 @@ a {
   color: var(--cor-primaria);
 }
 
-/* Acessibilidade de foco (#08) */
-:focus-visible {
-  outline: 2px solid var(--cor-primaria);
-  outline-offset: 2px;
-}
-
 /* 3. Layout -------------------------------------------------------------- */
 .container {
-  width: min(100% - 2rem, 960px);
+  width: min(100% - 2rem, var(--largura-max));
   margin-inline: auto;
 }
 
@@ -155,7 +149,6 @@ main {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
   padding: 0.85rem 1.4rem;
   border: 2px solid var(--cor-primaria);
   border-radius: 999px;
@@ -179,7 +172,6 @@ main {
 }
 
 .botao--secundario {
-  width: auto;
   white-space: nowrap;
   background: transparent;
   color: var(--cor-primaria);
@@ -192,7 +184,7 @@ main {
   color: #ffffff;
 }
 
-/* Formulário (#03, #07) */
+/* Formulário */
 .formulario {
   display: flex;
   flex-direction: column;
@@ -247,13 +239,9 @@ main {
   color: var(--cor-tinta-suave);
 }
 
-/* Modal (#11) */
+/* Modal (elemento <dialog> nativo) */
 .modal {
-  position: fixed;
-  inset: 0;
-  margin: auto;
   width: min(26rem, 100% - 2rem);
-  max-height: calc(100vh - 2rem);
   padding: 1.75rem;
   border: 0;
   border-top: 6px solid var(--cor-marca-texto);
@@ -261,21 +249,10 @@ main {
   background: var(--cor-superficie);
   color: var(--cor-tinta);
   box-shadow: 0 20px 50px rgb(27 33 64 / 0.25);
-  overflow-y: auto;
-}
-
-.modal:not([open]) {
-  display: none;
 }
 
 .modal::backdrop {
   background: rgb(27 33 64 / 0.55);
-}
-
-.modal__conteudo {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
 }
 
 .modal__acoes {
@@ -470,6 +447,11 @@ main {
 }
 
 /* 7. Acessibilidade ------------------------------------------------------ */
+:focus-visible {
+  outline: 3px solid var(--cor-primaria);
+  outline-offset: 2px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
