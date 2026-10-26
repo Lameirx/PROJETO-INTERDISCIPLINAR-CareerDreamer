@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Conte seus hobbies e interesses e descubra carreiras em tecnologia que combinam com você.">
   <title>Career Dreamer — Descubra sua carreira em tecnologia</title>
   <link rel="stylesheet" href="css/style.css">
@@ -13,12 +13,10 @@
 
   <header class="topo">
     <div class="container topo__conteudo">
-      <div>
-        <a href="index.html" class="marca">
-          <div class="marca__simbolo">cd</div>
-          <div>Career Dreamer</div>
-        </a>
-      </div>
+      <a href="index.html" class="marca">
+        <span class="marca__simbolo" aria-hidden="true">cd</span>
+        <span>Career Dreamer</span>
+      </a>
     </div>
   </header>
 
@@ -38,39 +36,30 @@
       </ol>
     </section>
 
-    <section class="cartao">
-      <h2 class="subtitulo-cartao">Seu perfil</h2>
+    <section class="cartao" aria-labelledby="titulo-perfil">
+      <h2 class="subtitulo-cartao" id="titulo-perfil">Seu perfil</h2>
 
       <form id="form-perfil" class="formulario">
         <div class="campo">
-          <div>
-            <label for="nome">Nome</label>
-          </div>
-          <div>
-            <input type="text" id="nome" name="nome" placeholder="Ex.: Aline Santos" required minlength="2" maxlength="60">
-          </div>
+          <label for="nome">Nome</label>
+          <input type="text" id="nome" name="nome" placeholder="Ex.: Aline Santos"
+                 required minlength="2" maxlength="60">
         </div>
 
         <div class="campo">
-          <div>
-            <label for="hobbies">Hobbies</label>
-          </div>
-          <div>
-            <textarea id="hobbies" name="hobbies" rows="3" required
-                      placeholder="Ex.: jogar videogame, desenhar, organizar eventos"></textarea>
-          </div>
-          <p class="dica">Separe cada hobby com vírgula.</p>
+          <label for="hobbies">Hobbies</label>
+          <textarea id="hobbies" name="hobbies" rows="3" required
+                    aria-describedby="dica-hobbies"
+                    placeholder="Ex.: jogar videogame, desenhar, organizar eventos"></textarea>
+          <p class="dica" id="dica-hobbies">Separe cada hobby com vírgula.</p>
         </div>
 
         <div class="campo">
-          <div>
-            <label for="interesses">Áreas de interesse</label>
-          </div>
-          <div>
-            <textarea id="interesses" name="interesses" rows="3" required
-                      placeholder="Ex.: design de interfaces, desenvolvimento web"></textarea>
-          </div>
-          <p class="dica">Separe cada interesse com vírgula.</p>
+          <label for="interesses">Áreas de interesse</label>
+          <textarea id="interesses" name="interesses" rows="3" required
+                    aria-describedby="dica-interesses"
+                    placeholder="Ex.: design de interfaces, desenvolvimento web"></textarea>
+          <p class="dica" id="dica-interesses">Separe cada interesse com vírgula.</p>
         </div>
 
         <button type="submit" class="botao">Descobrir minha carreira</button>
@@ -85,14 +74,14 @@
     </div>
   </footer>
 
-  <!-- Modal Tente mais tarde (#11) -->
-  <div id="modal-erro" class="modal" aria-hidden="true" role="dialog" aria-labelledby="modal-titulo">
-    <div class="modal__conteudo">
-      <h2 id="modal-titulo">Tente mais tarde</h2>
-      <p id="modal-mensagem">O serviço ainda não está disponível. Por favor, tente novamente mais tarde.</p>
-      <button type="button" id="btn-fechar-modal" class="botao">Entendi</button>
-    </div>
-  </div>
+  <!-- Modal "Tente mais tarde": o app.js chama showModal(); o Esc e o botão fecham sem JS extra -->
+  <dialog id="modal-aviso" class="modal" aria-labelledby="modal-titulo">
+    <h2 id="modal-titulo">Tente mais tarde</h2>
+    <p id="modal-mensagem">O serviço de análise ainda não está disponível.</p>
+    <form method="dialog" class="modal__acoes">
+      <button class="botao">Entendi</button>
+    </form>
+  </dialog>
 
 </body>
 </html>
