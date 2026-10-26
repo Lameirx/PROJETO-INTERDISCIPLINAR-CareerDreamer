@@ -1,65 +1,98 @@
 # Career Dreamer — Mapeamento Vocacional
 
-Página web em que estudantes informam nome, hobbies e interesses. Os dados são
-enviados para uma API com IA, que devolve um perfil profissional em JSON, exibido
-na página de resultado.
+> Descubra carreiras em tecnologia que combinam com você.
 
-Tecnologias: **HTML5, CSS3 e JavaScript (ES6) puro**, sem frameworks.
+O **Career Dreamer** é uma página web em que a pessoa conta o que gosta de fazer no tempo livre e o que desperta sua curiosidade. Com essas informações, o sistema devolve um mapa de carreiras em tecnologia, da mais para a menos compatível, com o que estudar primeiro em cada uma.
 
-## Sua missão
+## Descrição do projeto
 
-O cliente encontrou vários problemas. Eles estão descritos em **`ISSUES.md`**.
-Resolva cada issue e registre o que fez (um commit por issue é uma ótima prática):
+A pessoa preenche **nome**, **hobbies** e **áreas de interesse**. Os dados são enviados para uma API com inteligência artificial, que devolve um perfil profissional em JSON. Esse perfil é exibido na página de resultado com:
 
-```
-git commit -m "fix #02: campo nome aceita texto e tem validação"
-```
+- uma síntese do perfil;
+- as carreiras recomendadas, ordenadas pela compatibilidade (em %);
+- as competências-chave de cada carreira;
+- um roteiro de estudos numerado, em ordem.
 
-## Como rodar
+O projeto foi desenvolvido como atividade acadêmica do curso de Análise e Desenvolvimento de Sistemas, a partir de uma versão com defeitos entregue pela professora. Os problemas encontrados estão em [`ISSUES.md`](ISSUES.md) e as correções estão documentadas no Relatório de Correção de Software (RCS), em PDF, neste repositório.
 
-Não precisa instalar nada.
+## Público-alvo
 
-- **Opção 1:** abra o arquivo `index.html` no navegador (duplo clique).
-- **Opção 2 (recomendada):** no VS Code, instale a extensão **Live Server**,
-  clique com o botão direito em `index.html` → *Open with Live Server*.
-  A página recarrega sozinha a cada vez que você salva.
+- **Estudantes** que querem conhecer carreiras em tecnologia e saber por onde começar a estudar.
+- **Instituições de ensino**, como núcleos de carreiras e professores, que aplicam a ferramenta com turmas.
 
-Para testar a página de resultado **sem o backend**, abra `resultado.html?exemplo`
-(ou clique em "Ver um resultado de exemplo" no rodapé).
+Como parte do público acessa pelo celular, a página funciona em telas pequenas. Ela também foi ajustada para pessoas com baixa visão e para quem usa leitor de tela ou navega só pelo teclado.
 
-## Estrutura
+## Funcionalidades
 
-```
-versao-alunos/
-├── index.html          → formulário
-├── resultado.html      → página de resultado
-├── css/
-│   └── style.css       → todos os estilos
-├── js/
-│   ├── config.js       → endereço da API (cada grupo preenche o seu)
-│   ├── app.js          → lógica do formulário
-│   ├── resultado.js    → lógica da página de resultado
-│   └── dados-exemplo.js→ resposta de exemplo para testes
-├── ISSUES.md           → reclamações do cliente
-└── README.md
-```
+**Formulário de perfil (`index.html`)**
 
-## Configurando a API
+- Nome com 2 a 60 caracteres; hobbies e áreas de interesse separados por vírgula.
+- Campos obrigatórios com aviso no próprio campo. Espaços sobrando e itens vazios (por exemplo `, , ,`) são ignorados.
+- Envio dos dados para a API (`POST` em JSON).
+- Durante o envio, o botão mostra que está carregando e não pode ser clicado duas vezes.
+- Limite de tempo configurável para a resposta da API.
+- Se a API não estiver configurada, demorar demais ou der erro, aparece uma janela (modal) "Tente mais tarde" e o que a pessoa digitou **não é apagado**.
 
-Abra `js/config.js` e preencha o endereço **completo** do endpoint:
+**Página de resultado (`resultado.html`)**
 
-```js
-const CONFIG = Object.freeze({
-  API_URL: 'http://127.0.0.1:8000/api/career-match',
-  // ...
-});
-```
+- "Perfil de (nome)" e síntese do perfil.
+- Carreiras da mais para a menos compatível, cada uma com título, porcentagem e barra de compatibilidade, resumo, competências-chave (etiquetas) e roteiro de estudos.
+- A primeira carreira recebe o selo **"Melhor combinação"**.
+- Se a página for aberta sem dados, mostra uma mensagem amigável com um botão para voltar ao formulário.
+- Modo de teste sem a API: `resultado.html?exemplo`.
 
-Enquanto `API_URL` estiver vazio (`''`), o site deve mostrar o modal "Tente mais tarde".
+**Qualidade**
 
-## Contrato da API
+- Layout responsivo, testado em tela de celular de 360 px, sem zoom e sem rolagem lateral.
+- Acessibilidade: HTML semântico, idioma `pt-BR`, rótulos ligados aos campos, contraste mínimo de 4,5:1 (WCAG AA) e foco visível na navegação por teclado.
 
-**Requisição** — `POST` para `CONFIG.API_URL`, cabeçalho `Content-Type: application/json`:
+## Tecnologias utilizadas
+
+- **HTML5** semântico, incluindo o elemento nativo `<dialog>` para o modal.
+- **CSS3**: variáveis CSS, Flexbox e Grid.
+- **JavaScript (ES6)** puro, sem frameworks: `async/await`, `fetch`, `AbortSignal.timeout`, módulos de lógica simples e `sessionStorage` para levar o resultado do formulário até a página de resultado.
+- **API REST** com respostas em JSON.
+- **Git e GitHub** para versionamento; **VS Code com Live Server** (opcional) para desenvolvimento.
+
+## Requisitos mínimos
+
+- Navegador atualizado: Chrome ou Edge 103+, Firefox 100+ ou Safari 16+.
+- Conexão com a internet para consultar a API.
+- O endereço da API, fornecido pela professora (cada grupo configura o seu).
+- Opcional: [VS Code](https://code.visualstudio.com/) com a extensão **Live Server**.
+
+Não é necessário instalar nada nem usar Node.js: o projeto não tem etapa de compilação.
+
+## Instruções para execução
+
+1. **Obtenha o projeto**: no GitHub, use *Code → Download ZIP* e extraia a pasta, ou clone o repositório com `git clone` e o endereço do seu repositório.
+
+2. **Configure a API**: abra `js/config.js` e preencha o endereço **completo** do endpoint em `API_URL`:
+
+   ```js
+   const CONFIG = Object.freeze({
+     API_URL: 'http://127.0.0.1:8000/api/career-match',
+     TEMPO_LIMITE_MS: 60000,
+     CHAVE_RESULTADO: 'careerDreamer:resultado',
+   });
+   ```
+
+   Enquanto `API_URL` estiver vazio (`''`), o botão do formulário mostra o modal "Tente mais tarde".
+
+3. **Execute**:
+   - **Opção recomendada:** no VS Code, clique com o botão direito em `index.html` e escolha *Open with Live Server*. A página recarrega sozinha a cada alteração salva.
+   - **Opção simples:** dê um duplo clique em `index.html` para abrir no navegador.
+
+4. **Teste sem a API**: abra `resultado.html?exemplo` (ou clique em "Ver um resultado de exemplo" no rodapé da página inicial).
+
+**Observações**
+
+- Se a API estiver em um plano gratuito de hospedagem (por exemplo, Render), a primeira requisição depois de um tempo parado pode levar cerca de 1 minuto. O limite de 60 segundos em `TEMPO_LIMITE_MS` considera isso.
+- Se o navegador bloquear a requisição por CORS, é preciso que o servidor da API permita a origem da página. Isso é uma configuração do backend.
+
+## Integração com a API
+
+**Requisição:** `POST` para `CONFIG.API_URL`, com `Content-Type: application/json`.
 
 ```json
 {
@@ -69,7 +102,7 @@ Enquanto `API_URL` estiver vazio (`''`), o site deve mostrar o modal "Tente mais
 }
 ```
 
-**Resposta de sucesso** — status `200`:
+**Resposta de sucesso** (status `200`):
 
 ```json
 {
@@ -88,36 +121,32 @@ Enquanto `API_URL` estiver vazio (`''`), o site deve mostrar o modal "Tente mais
 }
 ```
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `user_name` | texto | Nome da pessoa |
-| `career_identity_statement` | texto | Síntese do perfil |
-| `recommended_careers` | lista | Carreiras recomendadas |
-| `match_score` | número 0–100 | Compatibilidade em % |
-| `key_skills` | lista de textos | Competências-chave |
-| `learning_path` | lista de textos | Roteiro de estudos, em ordem |
+Qualquer status diferente de `2xx` é tratado como erro. A quantidade de carreiras pode variar. Um exemplo completo está em `js/dados-exemplo.js`.
 
-Qualquer status diferente de `2xx` deve ser tratado como erro.
-A quantidade de carreiras pode variar (o exemplo real tem 4). Uma resposta completa está em `js/dados-exemplo.js`.
+## Estrutura do projeto
 
-> **Atenção:** se o backend estiver hospedado em plano gratuito (ex.: Render), a primeira
-> requisição depois de um tempo parado pode levar cerca de 1 minuto. Isso não é bug do front.
+```
+├── index.html            → formulário
+├── resultado.html        → página de resultado
+├── css/
+│   └── style.css         → todos os estilos
+├── js/
+│   ├── config.js         → endereço da API e limite de tempo
+│   ├── app.js            → lógica do formulário (validação e envio)
+│   ├── resultado.js      → lógica da página de resultado
+│   └── dados-exemplo.js  → resposta de exemplo para testes
+├── ISSUES.md             → problemas relatados pelo cliente
+├── README.md
+└── Relatorio_de_correcao_de_software_RCS.pdf
+```
 
-## Boas práticas que esperamos ver
+## Desenvolvedores
 
-- **KISS** (*Keep It Simple*): a solução mais simples que resolve o problema.
-- **YAGNI** (*You Aren't Gonna Need It*): não crie o que ninguém pediu.
-- HTML **semântico** (`header`, `main`, `section`, `footer`, `h1`, `ol`, `label for`…).
-- Validação com recursos **nativos do HTML5** sempre que possível.
-- `const`/`let`, *arrow functions*, `async/await`, *template strings*.
-- `textContent` em vez de `innerHTML` para textos que vêm da API.
-- Nomes de variáveis e funções **em português e descritivos**.
+| Nome | RGM |
 
-## Ferramentas úteis
+| Melissa C.Lameiras | 04896622-3 |
 
-- **F12 → Console:** erros de JavaScript e `console.log`.
-- **F12 → modo dispositivo (Ctrl+Shift+M):** simula celular.
-- **F12 → Lighthouse:** auditoria de acessibilidade.
-- [W3C Validator](https://validator.w3.org/) — valida o HTML.
-- [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/) — contraste de cores.
-- [MDN Web Docs](https://developer.mozilla.org/pt-BR/) — documentação em português.
+
+## Informações acadêmicas
+
+Atividade das disciplinas **Design Profissional** (Profª Isabella Luiza Souza) e **Desenvolvimento Front-End para Web** (Profª Aline Santos).
