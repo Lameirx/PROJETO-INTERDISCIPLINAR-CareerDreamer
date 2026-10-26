@@ -1,147 +1,87 @@
 /**
  * Página do formulário (index.html).
- * Lê os dados do formulário, valida, limpa e envia para a API (#10, #11, #12).
+ * Valida os dados, envia para a API configurada em CONFIG.API_URL
+ * e leva a pessoa para a página de resultado.
  */
 const formulario = document.querySelector('#form-perfil');
-const modalErro = document.querySelector('#modal-erro');
-const btnFecharModal = document.querySelector('#btn-fechar-modal');
+const botaoEnviar = formulario.querySelector('button[type="submit"]');
+const textoBotao = botaoEnviar.textContent;
+const modal = document.querySelector('#modal-aviso');
+const modalMensagem = document.querySelector('#modal-mensagem');
 
-// Funções de controle do Modal (#11)
-function abrirModal() {
-  if (modalErro) {
-    modalErro.setAttribute('open', '');
-    modalErro.removeAttribute('hidden');
-    btnFecharModal.focus();
-  }
-}
+// "a, , b," vira ["a", "b"]: tira espaços das pontas e ignora itens vazios
+const separarLista = (texto) =>
+  texto
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item) => item !== '');
 
-function fecharModal() {
-  if (modalErro) {
-    modalErro.removeAttribute('open');
-    modalErro.setAttribute('hidden', '');
-  }
-}
+const exigir = (campo, valido, mensagem) => campo.setCustomValidity(valido ? '' : mensagem);
 
-if (btnFecharModal) {
-  btnFecharModal.addEventListener('click', fecharModal);
-}
+const abrirModal = (mensagem) => {
+  modalMensagem.textContent = mensagem;
+  modal.showModal();
+};
 
-if (modalErro) {
-  modalErro.addEventListener('click', (e) => {
-    const rect = modalErro.getBoundingClientRect();
-    const isInDialog = (
-      rect.top <= e.clientY &&
-      e.clientY <= rect.bottom &&
-      rect.left <= e.clientX &&
-      e.clientX <= rect.right
+const enviarPerfil = async (perfil) => {
+  botaoEnviar.disabled = true;
+  botaoEnviar.textContent = 'Analisando seu perfil...';
+
+  try {
+    const resposta = await fetch(CONFIG.API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(perfil),
+      signal: AbortSignal.timeout(CONFIG.TEMPO_LIMITE_MS),
+    });
+
+    if (!resposta.ok) {
+      throw new Error(`A API respondeu com status ${resposta.status}`);
+    }
+
+    const resultado = await resposta.json();
+    sessionStorage.setItem(CONFIG.CHAVE_RESULTADO, JSON.stringify(resultado));
+    window.location.href = 'resultado.html';
+  } catch (erro) {
+    console.error('Falha ao consultar a API:', erro);
+    abrirModal(
+      erro.name === 'TimeoutError'
+        ? 'O servidor demorou demais para responder. Tente novamente em instantes.'
+        : 'Não foi possível gerar seu perfil agora. Seus dados continuam no formulário. Tente novamente em instantes.',
     );
-    if (!isInDialog) {
-      fecharModal();
-    }
+  } finally {
+    botaoEnviar.disabled = false;
+    botaoEnviar.textContent = textoBotao;
+  }
+};
+
+// Ao digitar, limpa o aviso do campo para ele ser revalidado no próximo envio
+formulario.addEventListener('input', (evento) => evento.target.setCustomValidity(''));
+
+formulario.addEventListener('submit', (evento) => {
+  evento.preventDefault();
+
+  const { nome, hobbies, interesses } = formulario.elements;
+  const nomeLimpo = nome.value.trim();
+  const listaHobbies = separarLista(hobbies.value);
+  const listaInteresses = separarLista(interesses.value);
+
+  exigir(nome, nomeLimpo.length >= 2, 'Informe um nome com pelo menos 2 letras.');
+  exigir(hobbies, listaHobbies.length > 0, 'Informe pelo menos um hobby.');
+  exigir(interesses, listaInteresses.length > 0, 'Informe pelo menos um interesse.');
+
+  if (!formulario.reportValidity()) {
+    return;
+  }
+
+  if (!CONFIG.API_URL) {
+    abrirModal('O serviço de análise ainda não está disponível.');
+    return;
+  }
+
+  enviarPerfil({
+    name: nomeLimpo,
+    hobbies: listaHobbies,
+    interests: listaInteresses,
   });
-
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && modalErro.hasAttribute('open')) {
-      fecharModal();
-    }
-  });
-}
-
-// Manipulação do envio do formulário
-if (formulario) {
-  formulario.addEventListener('submit', async (evento) => {
-    evento.preventDefault();
-
-    const campos = formulario.elements;
-    const nome = campos.nome.value.trim();
-    
-    // Tratamento e limpeza rigorosa dos hobbies e interesses (#10)
-    const hobbiesBrutos = campos.hobbies.value.split(',');
-    const hobbiesLimpos = hobbiesBrutos
-      .map(item => item.trim())
-      .filter(item => item.length > 0);
-
-    const interessesBrutos = campos.interesses.value.split(',');
-    const interessesLimpos = interessesBrutos
-      .map(item => item.trim())
-      .filter(item => item.length > 0);
-
-    // Validação de campos vazios ou sem itens válidos após limpeza (#10)
-    if (!nome) {
-      campos.nome.focus();
-      return;
-    }
-
-    if (hobbiesLimpos.length === 0) {
-      campos.hobbies.setCustomValidity('Informe ao menos um hobby válido.');
-      campos.hobbies.reportValidity();
-      campos.hobbies.focus();
-      return;
-    } else {
-      campos.hobbies.setCustomValidity('');
-    }
-
-    if (interessesLimpos.length === 0) {
-      campos.interesses.setCustomValidity('Informe ao menos um interesse válido.');
-      campos.interesses.reportValidity();
-      campos.interesses.focus();
-      return;
-    } else {
-      campos.interesses.setCustomValidity('');
-    }
-
-    const perfil = {
-      name: nome,
-      hobbies: hobbiesLimpos,
-      interests: interessesLimpos,
-    };
-
-    // Verificação da API configurada (#12)
-    if (!CONFIG || !CONFIG.API_URL || CONFIG.API_URL.trim() === '') {
-      abrirModal();
-      return;
-    }
-
-    const botaoSubmit = formulario.querySelector('button[type="submit"]');
-    if (botaoSubmit) {
-      botaoSubmit.disabled = true;
-      botaoSubmit.textContent = 'Enviando...';
-    }
-
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), CONFIG.TEMPO_LIMITE_MS || 60000);
-
-      const resposta = await fetch(CONFIG.API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(perfil),
-        signal: controller.signal
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!resposta.ok) {
-        throw new Error('Erro na resposta do servidor');
-      }
-
-      const dadosResultado = await resposta.json();
-      
-      if (typeof CONFIG.CHAVE_RESULTADO === 'string') {
-        localStorage.setItem(CONFIG.CHAVE_RESULTADO, JSON.stringify(dadosResultado));
-      }
-
-      window.location.href = 'resultado.html';
-
-    } catch (erro) {
-      // Se a API demorar demais ou falhar, mostra o modal e mantém os dados (#12)
-      abrirModal();
-      if (botaoSubmit) {
-        botaoSubmit.disabled = false;
-        botaoSubmit.textContent = 'Descobrir minha carreira';
-      }
-    }
-  });
-}
+});
