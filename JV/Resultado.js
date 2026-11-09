@@ -1,67 +1,87 @@
 /**
- * Página de resultado (resultado.html).
- * Lê o JSON da API (guardado pelo formulário) ou, com ?exemplo na URL,
- * os dados de js/dados-exemplo.js, e mostra o perfil na tela.
+ * Página do formulário (index.html).
+ * Valida os dados, envia para a API configurada em CONFIG.API_URL
+ * e leva a pessoa para a página de resultado.
  */
-const secaoResultado = document.querySelector('#resultado');
-const secaoSemResultado = document.querySelector('#sem-resultado');
-const listaCarreiras = document.querySelector('#lista-carreiras');
-const modeloCarreira = document.querySelector('#modelo-carreira');
+const formulario = document.querySelector('#form-perfil');
+const botaoEnviar = formulario.querySelector('button[type="submit"]');
+const textoBotao = botaoEnviar.textContent;
+const modal = document.querySelector('#modal-aviso');
+const modalMensagem = document.querySelector('#modal-mensagem');
 
-const lerDados = () => {
-  if (new URLSearchParams(window.location.search).has('exemplo')) {
-    return DADOS_EXEMPLO;
-  }
+// "a, , b," vira ["a", "b"]: tira espaços das pontas e ignora itens vazios
+const separarLista = (texto) =>
+  texto
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item) => item !== '');
+
+const exigir = (campo, valido, mensagem) => campo.setCustomValidity(valido ? '' : mensagem);
+
+const abrirModal = (mensagem) => {
+  modalMensagem.textContent = mensagem;
+  modal.showModal();
+};
+
+const enviarPerfil = async (perfil) => {
+  botaoEnviar.disabled = true;
+  botaoEnviar.textContent = 'Analisando seu perfil...';
 
   try {
-    return JSON.parse(sessionStorage.getItem(CONFIG.CHAVE_RESULTADO));
-  } catch {
-    return null;
+    const resposta = await fetch(CONFIG.API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(perfil),
+      signal: AbortSignal.timeout(CONFIG.TEMPO_LIMITE_MS),
+    });
+
+    if (!resposta.ok) {
+      throw new Error(`A API respondeu com status ${resposta.status}`);
+    }
+
+    const resultado = await resposta.json();
+    sessionStorage.setItem(CONFIG.CHAVE_RESULTADO, JSON.stringify(resultado));
+    window.location.href = 'resultado.html';
+  } catch (erro) {
+    console.error('Falha ao consultar a API:', erro);
+    abrirModal(
+      erro.name === 'TimeoutError'
+        ? 'O servidor demorou demais para responder. Tente novamente em instantes.'
+        : 'Não foi possível gerar seu perfil agora. Seus dados continuam no formulário. Tente novamente em instantes.',
+    );
+  } finally {
+    botaoEnviar.disabled = false;
+    botaoEnviar.textContent = textoBotao;
   }
 };
 
-const dadosValidos = (dados) =>
-  Boolean(dados) &&
-  Array.isArray(dados.recommended_careers) &&
-  dados.recommended_careers.length > 0;
+// Ao digitar, limpa o aviso do campo para ele ser revalidado no próximo envio
+formulario.addEventListener('input', (evento) => evento.target.setCustomValidity(''));
 
-// Cria um <li> para cada texto, sempre com textContent (texto vem da API)
-const preencherLista = (lista, textos = []) => {
-  lista.replaceChildren(
-    ...textos.map((texto) => {
-      const item = document.createElement('li');
-      item.textContent = texto;
-      return item;
-    }),
-  );
-};
+formulario.addEventListener('submit', (evento) => {
+  evento.preventDefault();
 
-const criarCartao = (carreira, ehMelhor) => {
-  const cartao = modeloCarreira.content.cloneNode(true);
+  const { nome, hobbies, interesses } = formulario.elements;
+  const nomeLimpo = nome.value.trim();
+  const listaHobbies = separarLista(hobbies.value);
+  const listaInteresses = separarLista(interesses.value);
 
-  cartao.querySelector('.carreira').classList.toggle('carreira--principal', ehMelhor);
-  cartao.querySelector('.carreira__selo').hidden = !ehMelhor;
-  cartao.querySelector('.carreira__titulo').textContent = carreira.title;
-  cartao.querySelector('.carreira__percentual').textContent = `${carreira.match_score}%`;
-  cartao.querySelector('.barra__nivel').style.setProperty('--nivel', `${carreira.match_score}%`);
-  cartao.querySelector('.carreira__resumo').textContent = carreira.summary;
-  preencherLista(cartao.querySelector('.chips'), carreira.key_skills);
-  preencherLista(cartao.querySelector('.roteiro'), carreira.learning_path);
+  exigir(nome, nomeLimpo.length >= 2, 'Informe um nome com pelo menos 2 letras.');
+  exigir(hobbies, listaHobbies.length > 0, 'Informe pelo menos um hobby.');
+  exigir(interesses, listaInteresses.length > 0, 'Informe pelo menos um interesse.');
 
-  return cartao;
-};
+  if (!formulario.reportValidity()) {
+    return;
+  }
 
-const dados = lerDados();
+  if (!CONFIG.API_URL) {
+    abrirModal('O serviço de análise ainda não está disponível.');
+    return;
+  }
 
-if (dadosValidos(dados)) {
-  const carreiras = [...dados.recommended_careers].sort((a, b) => b.match_score - a.match_score);
-
-  document.querySelector('#nome-usuario').textContent = dados.user_name;
-  document.querySelector('#sintese').textContent = dados.career_identity_statement;
-  listaCarreiras.replaceChildren(
-    ...carreiras.map((carreira, indice) => criarCartao(carreira, indice === 0)),
-  );
-  secaoResultado.hidden = false;
-} else {
-  secaoSemResultado.hidden = false;
-}
+  enviarPerfil({
+    name: nomeLimpo,
+    hobbies: listaHobbies,
+    interests: listaInteresses,
+  });
+});
